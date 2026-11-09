@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ekspedisi Nusantara: Game Keanekaragaman Hayati Indonesia</title>
+  <style>
+    /* ==========================================
+       RESET & BASE STYLES
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: #1b381e;
+      color: #2c3e50;
+    }
+
+    /* Container Penskalaan Otomatis 16:9 Aspect Ratio Main Stage */
+    #app-viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #122414;
+    }
+
+    #game-stage {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 Aspect Ratio */
+      max-height: 100vh;
+      max-width: 177.78vh; /* 16:9 Aspect Ratio */
+      background: #fdfbf7;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Floating Global Controls */
+    .global-controls {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #2E7D32;
+      background: #ffffff;
+      color: #2E7D32;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.92);
+    }
+
+    /* Common Buttons */
+    .btn-primary {
+      background: #2E7D32;
+      color: #ffffff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #1b4d1f, 0 8px 15px rgba(0,0,0,0.2);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 56px;
+    }
+
+    .btn-primary:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #1b4d1f, 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .btn-secondary {
+      background: #795548;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #4b3228;
+      min-height: 48px;
+    }
+
+    .btn-secondary:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #4b3228;
+    }
+
+    /* Modal / Screen Panels */
+    .screen-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      background: #fdfbf7;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .screen-panel.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Header Modul */
+    .panel-header {
+      background: #2E7D32;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .panel-header h2 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    /* ==========================================
+       1. LAYAR LOGIN / IDENTITAS
+       ========================================== */
+    #screen-login {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .login-card {
+      background: white;
+      padding: 36px 48px;
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(46, 125, 50, 0.2);
+      width: 90%;
+      max-width: 520px;
+      border: 3px solid #81c784;
+    }
+
+    .brand-logo {
+      width: 80px;
+      height: 80px;
+      background: #2E7D32;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .login-card h1 {
+      color: #2E7D32;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      color: #555;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #2E7D32;
+    }
+
+    /* ==========================================
+       2. DASHBOARD MENU UTAMA
+       ========================================== */
+    #screen-menu {
+      background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), #e8f5e9;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .menu-container {
+      text-align: center;
+      max-width: 800px;
+      width: 90%;
+    }
+
+    .welcome-banner {
+      background: #2E7D32;
+      color: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .welcome-banner h2 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat( auto-fit, minmax(220px, 1fr) );
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    /* ==========================================
+       3. MODUL PRE-GAME / MATERI / INFO
+       ========================================== */
+    .tab-navigation {
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 4px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: #2E7D32;
+      border-bottom-color: #2E7D32;
+    }
+
+    .tab-content {
+      display: none;
+      line-height: 1.6;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .info-card {
+      background: #f1f8e9;
+      border-left: 5px solid #2E7D32;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* ==========================================
+       4. HUD & ARENA GAME
+       ========================================== */
+    #screen-game {
+      background: #eef5ee;
+    }
+
+    .game-hud {
+      background: #2E7D32;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .hud-player { font-weight: bold; font-size: 1.1rem; }
+    .hud-score { background: #1b4d1f; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+    .hud-stars { color: #ffca28; font-size: 1.2rem; }
+
+    .hud-progress-container {
+      width: 150px;
+      height: 12px;
+      background: #1b4d1f;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .hud-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #66bb6a;
+      transition: width 0.3s;
+    }
+
+    /* PETA EKSPEDISI INTERRUPT SCREEN */
+    #map-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #e8f5e9;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .map-container {
+      width: 100%;
+      max-width: 900px;
+      height: 380px;
+      background: #ffffff;
+      border: 3px solid #81c784;
+      border-radius: 16px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .map-node {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 4px solid #795548;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s;
+    }
+
+    .map-node.active {
+      border-color: #ff9800;
+      animation: pulse 1.5s infinite;
+    }
+
+    .map-node.completed {
+      background: #81c784;
+      border-color: #2E7D32;
+      color: white;
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* GAMEPLAY LAYOUT FLEXIBLE */
+    .game-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      position: relative;
+    }
+
+    .instructions-bar {
+      background: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border-left: 4px solid #2E7D32;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .play-area {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      height: 100%;
+    }
+
+    /* DRAG & DROP OBJECTS CONTAINER */
+    .source-container {
+      flex: 1;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+      justify-content: center;
+      border: 2px dashed #a5d6a7;
+      overflow-y: auto;
+    }
+
+    .target-container {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    /* DRAGGABLE CARDS */
+    .draggable-card {
+      min-width: 130px;
+      max-width: 220px;
+      min-height: 56px;
+      background: #ffffff;
+      border: 2px solid #2E7D32;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .draggable-card.selected {
+      border-color: #ff9800;
+      background: #fff3e0;
+      transform: scale(1.05);
+    }
+
+    .draggable-card.dragging {
+      opacity: 0.5;
+    }
+
+    .draggable-card.locked {
+      background: #e8f5e9;
+      border-color: #4caf50;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    /* DROP ZONES */
+    .drop-zone {
+      background: #ffffff;
+      border: 2px dashed #795548;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .drop-zone.hovered {
+      background: #efebe9;
+      border-style: solid;
+    }
+
+    .drop-zone-title {
+      font-weight: bold;
+      color: #5d4037;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #d7ccc8;
+      padding-bottom: 4px;
+    }
+
+    /* DIAGRAM / PETA SPECIFIC STYLES (RONDE 3 & 4) */
+    .diagram-board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #e0f2f1;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .map-zone-target {
+      position: absolute;
+      border: 2px dashed #00796b;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      text-align: center;
+    }
+
+    /* FEEDBACK MODAL & TOAST */
+    .feedback-toast {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 25px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 100;
+    }
+
+    .feedback-toast.correct { background: #4caf50; }
+    .feedback-toast.wrong { background: #f44336; }
+
+    /* LAYAR RESULT / SELESAI */
+    #screen-result {
+      background: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .result-card {
+      background: white;
+      padding: 32px 40px;
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 650px;
+    }
+
+    .badge-icon {
+      font-size: 4rem;
+      margin: 10px 0;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      margin: 16px 0;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    /* RESPONSIVE DESIGN BREAKPOINTS (MOBILE & TABLET) */
+    @media (max-width: 768px) or (max-aspect-ratio: 4/3) {
+      .play-area {
+        flex-direction: column-reverse;
+      }
+      .source-container {
+        max-height: 180px;
+      }
+      .target-container {
+        flex: 1;
+      }
+      .draggable-card {
+        min-width: 100px;
+        font-size: 0.85rem;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-viewport">
+    <div id="game-stage">
+
+      <!-- FLOATING AUDIO & FULLSCREEN CONTROLS -->
+      <div class="global-controls">
+        <button class="btn-icon" id="btn-audio" title="Matikan/Hidupkan Suara">🔊</button>
+        <button class="btn-icon" id="btn-fullscreen" title="Layar Penuh">⛶</button>
+      </div>
+
+      <!-- ==========================================
+           1. LAYAR LOGIN / IDENTITAS
+           ========================================== -->
+      <div id="screen-login" class="screen-panel active">
+        <div class="login-card">
+          <div class="brand-logo">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h1>EKSPEDISI NUSANTARA</h1>
+          <p>Petualangan Menjelajahi Keanekaragaman Hayati Indonesia</p>
+
+          <form id="form-login" onsubmit="event.preventDefault(); GameApp.submitLogin();">
+            <div class="form-group">
+              <label for="player-name">Nama Lengkap Siswa:</label>
+              <input type="text" id="player-name" placeholder="Masukkan nama kamu..." required autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="player-class">Kelas / No. Absen:</label>
+              <input type="text" id="player-class" placeholder="Contoh: X.1 / 15" required autocomplete="off">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">
+              🚀 MASUK KE GAME
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           2. DASHBOARD MENU UTAMA
+           ========================================== -->
+      <div id="screen-menu" class="screen-panel">
+        <div class="menu-container">
+          <div class="welcome-banner">
+            <h2 id="menu-welcome-text">Selamat Datang, Peneliti Muda!</h2>
+            <p>Jelajahi tiga pos utama untuk mengungkap kekayaan hayati Nusantara!</p>
+          </div>
+
+          <div class="menu-grid">
+            <button class="btn-primary" onclick="GameApp.startExpedition()">
+              🎮 Mulai Bermain
+            </button>
+            <button class="btn-secondary" onclick="GameApp.showPanel('screen-info', 'cp-tp')">
+              🎯 Pendahuluan & CP-TP
+            </button>
+            <button class="btn-secondary" onclick="GameApp.showPanel('screen-info', 'guide')">
+              📖 Petualangan & Petunjuk
+            </button>
+            <button class="btn-secondary" onclick="GameApp.showPanel('screen-info', 'materi')">
+              📚 Materi Pembelajaran
+            </button>
+            <button class="btn-secondary" onclick="GameApp.showPanel('screen-info', 'dev')">
+              👨‍🏫 Info Pengembang
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           3. MODUL PRE-GAME / MATERI / INFO
+           ========================================== -->
+      <div id="screen-info" class="screen-panel">
+        <div class="panel-header">
+          <h2 id="info-panel-title">📌 Informasi Pembelajaran</h2>
+          <button class="btn-secondary" onclick="GameApp.showPanel('screen-menu')">Kembali ke Menu</button>
+        </div>
+        <div class="panel-body">
+          <div class="tab-navigation">
+            <button class="tab-btn" id="tab-btn-cp-tp" onclick="GameApp.switchTab('cp-tp')">CP & TP</button>
+            <button class="tab-btn" id="tab-btn-guide" onclick="GameApp.switchTab('guide')">Petunjuk</button>
+            <button class="tab-btn" id="tab-btn-materi" onclick="GameApp.switchTab('materi')">Materi</button>
+            <button class="tab-btn" id="tab-btn-dev" onclick="GameApp.switchTab('dev')">Pengembang</button>
+          </div>
+
+          <!-- TAB CP & TP -->
+          <div class="tab-content" id="tab-cp-tp">
+            <div class="info-card">
+              <h3>🎯 Capaian Pembelajaran (CP) - Fase E</h3>
+              <p>Pada akhir Fase E, peserta didik mampu menerapkan konsep dan prinsip keanekaragaman makhluk hidup dan peranannya, serta menganalisis perubahan lingkungan dan upaya pelestariannya.</p>
+            </div>
+            <div class="info-card">
+              <h3>📌 Tujuan Pembelajaran (TP)</h3>
+              <ol style="margin-left: 20px; margin-top: 8px;">
+                <li>Membedakan keanekaragaman gen, spesies, dan ekosistem beserta contohnya.</li>
+                <li>Menjelaskan persebaran fauna Indonesia berdasarkan garis Wallace dan Weber.</li>
+                <li>Mengidentifikasi flora-fauna endemik Indonesia beserta daerah asal dan perannya.</li>
+                <li>Menganalisis ancaman terhadap keanekaragaman hayati dan menentukan upaya pelestariannya.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- TAB PETUNJUK -->
+          <div class="tab-content" id="tab-guide">
+            <div class="info-card">
+              <h3>🖐️ Cara Bermain</h3>
+              <p>1. <strong>Seret & Lepas (Drag & Drop):</strong> Seret objek kartu ke area target yang sesuai.</p>
+              <p>2. <strong>Mode Sentuh / Ketuk (Tap-to-Select):</strong> Jika menggunakan layar sentuh dan sulit menyeret, ketuk objek kartu sekali hingga berwarna oranye, lalu ketuk area target tempat kamu ingin meletakkannya.</p>
+              <p>3. <strong>Skor & Bintang:</strong> Jawab benar pada percobaan pertama untuk meraih poin maksimal dan 3 Bintang Ronde!</p>
+            </div>
+          </div>
+
+          <!-- TAB MATERI PEMBELAJARAN -->
+          <div class="tab-content" id="tab-materi">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <button class="btn-secondary" onclick="GameApp.showSubMateri(1)">1. 3 Tingkat Gen-Spesies-Ekosistem</button>
+              <button class="btn-secondary" onclick="GameApp.showSubMateri(2)">2. Persebaran Fauna</button>
+              <button class="btn-secondary" onclick="GameApp.showSubMateri(3)">3. Flora-Fauna Endemik</button>
+              <button class="btn-secondary" onclick="GameApp.showSubMateri(4)">4. Ancaman & Pelestarian</button>
+            </div>
+            <div id="sub-materi-content" class="info-card">
+              <!-- Content injected via JS -->
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+              <button class="btn-primary" onclick="GameApp.startExpedition()">Saya Siap, Mulai Ekspedisi! 🚀</button>
+            </div>
+          </div>
+
+          <!-- TAB INFO PENGEMBANG -->
+          <div class="tab-content" id="tab-dev">
+            <div class="info-card">
+              <h3>👨‍🏫 Pengembang Media</h3>
+              <p><strong>Nama:</strong> Azinal Reza Rifaad Hasani</p>
+              <p><strong>Peran:</strong> Guru Biologi</p>
+              <p><strong>Instansi:</strong> SMA Negeri 3 Makassar</p>
+              <p style="margin-top: 10px; font-style: italic;">Media Pembelajaran Biologi Interaktif Kelas X Fase E - Keanekaragaman Hayati Indonesia.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           4. GAME ARENA & MAP OVERLAY
+           ========================================== -->
+      <div id="screen-game" class="screen-panel">
+        
+        <!-- PETA EKSPEDISI INTERRUPT OVERLAY -->
+        <div id="map-overlay">
+          <h2 style="color: #2E7D32; margin-bottom: 10px;">🗺️ Peta Ekspedisi Nusantara</h2>
+          <p style="margin-bottom: 20px;">Pilih pos ekspedisi untuk memulai riset lapangan:</p>
+          
+          <div class="map-container">
+            <!-- SVG Skematis Peta Indonesia -->
+            <svg width="100%" height="100%" viewBox="0 0 800 350" preserveAspectRatio="none" style="opacity: 0.35;">
+              <path d="M50 150 Q120 120 200 180 T350 200 T450 150 T650 180 T750 200" stroke="#2E7D32" stroke-width="40" fill="none" stroke-linecap="round"/>
+              <circle cx="120" cy="150" r="40" fill="#a5d6a7"/>
+              <circle cx="280" cy="220" r="30" fill="#a5d6a7"/>
+              <circle cx="340" cy="140" r="45" fill="#a5d6a7"/>
+              <circle cx="500" cy="170" r="50" fill="#a5d6a7"/>
+              <circle cx="700" cy="190" r="60" fill="#a5d6a7"/>
+            </svg>
+
+            <!-- Map Nodes (Pos Interactive) -->
+            <div class="map-node" id="node-pos1" style="left: 15%; top: 45%;">POS 1</div>
+            <div class="map-node" id="node-pos2" style="left: 40%; top: 40%;">POS 2</div>
+            <div class="map-node" id="node-pos3" style="left: 65%; top: 50%;">POS 3</div>
+            <div class="map-node" id="node-pos4" style="left: 88%; top: 45%;">MISI</div>
+          </div>
+
+          <button class="btn-primary" style="margin-top: 20px;" id="btn-continue-expedition" onclick="GameApp.launchCurrentRound()">
+            Lanjutkan Ekspedisi 🚀
+          </button>
+        </div>
+
+        <!-- HUD GAME -->
+        <div class="game-hud">
+          <div class="hud-player">👤 <span id="hud-name">Pemain</span></div>
+          <div class="hud-score">Skor: <span id="hud-score-val">0</span></div>
+          <div>
+            <span id="hud-round-title" style="font-weight: bold; margin-right: 15px;">Ronde 1/8</span>
+            <span class="hud-stars" id="hud-stars-display">⭐⭐⭐</span>
+          </div>
+          <div class="hud-progress-container">
+            <div class="hud-progress-bar" id="hud-progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- PLAY ARENA -->
+        <div class="game-body">
+          <div class="instructions-bar">
+            <span id="game-instruction-text">Petunjuk Tantangan...</span>
+            <div>
+              <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="GameApp.resetCurrentRound()">↺ Ulangi</button>
+              <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="GameApp.showPanel('screen-menu')">🏠 Menu</button>
+            </div>
+          </div>
+
+          <div class="play-area" id="main-play-area">
+            <!-- Dynamic Inject D&D Zones and Cards -->
+          </div>
+
+          <!-- Toast Umpan Balik -->
+          <div class="feedback-toast" id="feedback-toast"></div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           5. LAYAR HASIL AKHIR & PENUTUP
+           ========================================== -->
+      <div id="screen-result" class="screen-panel">
+        <div class="result-card">
+          <h2>🎉 EKSPEDISI SELESAI!</h2>
+          <p id="result-player-name" style="font-size: 1.1rem; margin-top: 6px;">Selamat, Peneliti Muda!</p>
+          
+          <div class="badge-icon" id="result-badge">🥇</div>
+          <h3 id="result-badge-title" style="color: #2E7D32; margin-bottom: 12px;">Lencana Emas: Peneliti Utama</h3>
+
+          <div style="display: flex; justify-content: center; gap: 20px; margin: 16px 0;">
+            <div class="info-card" style="margin: 0; min-width: 140px;">
+              <small>Total Skor</small>
+              <h2 id="result-final-score" style="color: #2E7D32;">0</h2>
+            </div>
+            <div class="info-card" style="margin: 0; min-width: 140px;">
+              <small>Total Bintang</small>
+              <h2 id="result-final-stars" style="color: #ff9800;">0 / 24</h2>
+            </div>
+          </div>
+
+          <h4>🏆 Papan Peringkat Lokal</h4>
+          <table class="leaderboard-table">
+            <thead>
+              <tr><th>#</th><th>Nama</th><th>Kelas</th><th>Skor</th></tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;">
+            <button class="btn-primary" onclick="GameApp.startExpedition()">🔄 Main Lagi</button>
+            <button class="btn-secondary" onclick="GameApp.showPanel('screen-menu')">🏠 Menu Utama</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SCRIPT UTAMA & DATA SOAL JAVASCRIPT
+       ========================================== -->
+  <script>
+    /* ==========================================
+       DATA MATERI & SOAL GAME (EDITABLE BY TEACHER)
+       ========================================== */
+    const GAME_DATA = {
+      materi: {
+        1: `<h4>TIGA TINGKAT KEANEKARAGAMAN HAYATI</h4>
+            <p>• <strong>Gen:</strong> Variasi dalam SATU spesies (misal: mawar merah & putih, varietas padi).</p>
+            <p>• <strong>Spesies:</strong> Perbedaan antar jenis spesies (misal: kucing, harimau, singa).</p>
+            <p>• <strong>Ekosistem:</strong> Interaksi makhluk hidup dengan lingkungannya (misal: hutan mangrove, terumbu karang).</p>`,
+        2: `<h4>PERSEBARAN FAUNA INDONESIA</h4>
+            <p>• <strong>Zona Asiatis (Barat):</strong> Sumatra, Jawa, Kalimantan, Bali. Fauna mirip Asia (Gajah, Harimau).</p>
+            <p>• <strong>Zona Peralihan/Wallacea (Tengah):</strong> Sulawesi, Nusa Tenggara, Maluku (Anoa, Komodo).</p>
+            <p>• <strong>Zona Australis (Timur):</strong> Papua & sekitarnya (Cenderawasih, Kanguru Pohon).</p>
+            <p>• <strong>Garis Wallace:</strong> Memisahkan Asiatis & Peralihan. <strong>Garis Weber:</strong> Memisahkan Peralihan & Australis.</p>`,
+        3: `<h4>FLORA & FAUNA ENDEMIK</h4>
+            <p>• <strong>Endemik:</strong> Hanya ada di wilayah tertentu dan tidak ditemukan alami di tempat lain.</p>
+            <p>• Contoh: Komodo (NTT), Anoa (Sulawesi), Jalak Bali (Bali), Rafflesia arnoldii (Sumatra).</p>`,
+        4: `<h4>ANCAMAN & PELAKSANAN KONSERVASI</h4>
+            <p>• <strong>Ancaman:</strong> Deforestasi, perburuan ilegal, pencemaran, spesies invasif.</p>
+            <p>• <strong>In Situ:</strong> Pelestarian DI HABITAT ASLI (Taman Nasional Ujung Kulon).</p>
+            <p>• <strong>Ex Situ:</strong> Pelestarian DI LUAR HABITAT ASLI (Kebun Raya, Penangkaran, Bank Benih).</p>`
+      },
+      rounds: [
+        // POS 1: RONDE 1
+        {
+          pos: 1,
+          roundNum: 1,
+          title: "POS 1: Tiga Wajah Keanekaragaman (Bagian 1)",
+          instruction: "Seret atau ketuk kartu contoh ke keranjang tingkat keanekaragaman yang tepat!",
+          zones: [
+            { id: "gen", label: "GEN (Variasi 1 Spesies)" },
+            { id: "spesies", label: "SPESIES (Beragam Jenis)" },
+            { id: "ekosistem", label: "EKOSISTEM (Lingkungan)" }
+          ],
+          items: [
+            { id: "i1", text: "🌹 Warna Bunga Mawar", target: "gen" },
+            { id: "i2", text: "🥭 Rasa & Kulit Mangga", target: "gen" },
+            { id: "i3", text: "🌾 Variotas Papi Rojolele", target: "gen" },
+            { id: "i4", text: "🐅 Harimau & Kucing", target: "spesies" },
+            { id: "i5", text: "🍊 Mangga & Jambu", target: "spesies" },
+            { id: "i6", text: "🦁 Singa & Harimau", target: "spesies" },
+            { id: "i7", text: "🌴 Hutan Mangrove", target: "ekosistem" },
+            { id: "i8", text: "🪸 Terumbu Karang", target: "ekosistem" },
+            { id: "i9", text: "🌾 Ekosistem Sawah", target: "ekosistem" }
+          ]
+        },
+        // POS 1: RONDE 2
+        {
+          pos: 1,
+          roundNum: 2,
+          title: "POS 1: Tiga Wajah Keanekaragaman (Bagian 2)",
+          instruction: "Kelompokkan contoh keanekaragaman hayati berikut ke wadah yang sesuai!",
+          zones: [
+            { id: "gen", label: "GEN (Variasi 1 Spesies)" },
+            { id: "spesies", label: "SPESIES (Beragam Jenis)" },
+            { id: "ekosistem", label: "EKOSISTEM (Lingkungan)" }
+          ],
+          items: [
+            { id: "i2_1", text: "🐓 Ayam Kampung & Broiler", target: "gen" },
+            { id: "i2_2", text: "🍊 Variasi Ukuran Jeruk", target: "gen" },
+            { id: "i2_3", text: "🐦 Paruh Kutilang Populasi", target: "gen" },
+            { id: "i2_4", text: "🦧 Orangutan & Siamang", target: "spesies" },
+            { id: "i2_5", text: "🌽 Padi, Jagung, Wheat", target: "spesies" },
+            { id: "i2_6", text: "🐒 Bekantan & Orangutan", target: "spesies" },
+            { id: "i2_7", text: "🏞️ Ekosistem Sungai", target: "ekosistem" },
+            { id: "i2_8", text: "🌱 Padang Lamun Laut", target: "ekosistem" },
+            { id: "i2_9", text: "🌧️ Hutan Hujan Tropis", target: "ekosistem" }
+          ]
+        },
+        // POS 2: RONDE 3
+        {
+          pos: 2,
+          roundNum: 3,
+          title: "POS 2: Garis Pembatas Fauna Indonesia",
+          instruction: "Tempatkan nama Zona Persebaran dan Garis Pembatas ke lokasi yang tepat!",
+          type: "diagram",
+          zones: [
+            { id: "z_asiatis", label: "Zona ASIATIS (Barat)", style: "top: 20%; left: 10%; width: 25%; height: 60%;" },
+            { id: "z_peralihan", label: "Zona PERALIHAN (Tengah)", style: "top: 20%; left: 38%; width: 24%; height: 60%;" },
+            { id: "z_australis", label: "Zona AUSTRALIS (Timur)", style: "top: 20%; left: 65%; width: 25%; height: 60%;" },
+            { id: "g_wallace", label: "Garis WALLACE (Barat-Tengah)", style: "top: 5%; left: 34%; width: 4%; height: 90%; background: rgba(255,0,0,0.2);" },
+            { id: "g_weber", label: "Garis WEBER (Tengah-Timur)", style: "top: 5%; left: 61%; width: 4%; height: 90%; background: rgba(255,0,0,0.2);" }
+          ],
+          items: [
+            { id: "d1", text: "🌏 Zona ASIATIS", target: "z_asiatis" },
+            { id: "d2", text: "🏝️ Zona PERALIHAN", target: "z_peralihan" },
+            { id: "d3", text: "🦘 Zona AUSTRALIS", target: "z_australis" },
+            { id: "d4", text: "📍 Garis WALLACE", target: "g_wallace" },
+            { id: "d5", text: "📍 Garis WEBER", target: "g_weber" }
+          ]
+        },
+        // POS 2: RONDE 4
+        {
+          pos: 2,
+          roundNum: 4,
+          title: "POS 2: Fauna Khas Tiap Zona",
+          instruction: "Seret satwa-satwa berikut ke Zona Biogeografi yang sesuai!",
+          zones: [
+            { id: "asiatis", label: "ASIATIS (Sumatra, Jawa, Kaltim)" },
+            { id: "peralihan", label: "PERALIHAN / WALLACEA (Sulawesi, NTT)" },
+            { id: "australis", label: "AUSTRALIS (Papua & Maluku)" }
+          ],
+          items: [
+            { id: "f1", text: "🐅 Harimau Sumatra", target: "asiatis" },
+            { id: "f2", text: "🐘 Gajah Sumatra", target: "asiatis" },
+            { id: "f3", text: "🦧 Orangutan", target: "asiatis" },
+            { id: "f4", text: "🐂 Anoa Sulawesi", target: "peralihan" },
+            { id: "f5", text: "🐒 Tarsius", target: "peralihan" },
+            { id: "f6", text: "🦎 Komodo", target: "peralihan" },
+            { id: "f7", text: "🦘 Kanguru Pohon", target: "australis" },
+            { id: "f8", text: "🐦 Burung Cenderawasih", target: "australis" },
+            { id: "f9", text: "🦤 Burung Kasuari", target: "australis" }
+          ]
+        },
+        // POS 3: RONDE 5
+        {
+          pos: 3,
+          roundNum: 5,
+          title: "POS 3: Endemik Nusantara (Daerah Asal)",
+          instruction: "Jodohkan Spesies Endemik dengan Daerah Asal utamanya!",
+          zones: [
+            { id: "ntt", label: "Nusa Tenggara Timur (NTT)" },
+            { id: "sulawesi", label: "Sulawesi" },
+            { id: "bali", label: "Bali" },
+            { id: "sumatra", label: "Sumatra / Bengkulu" },
+            { id: "papua", label: "Papua" }
+          ],
+          items: [
+            { id: "e1", text: "🦎 Komodo", target: "ntt" },
+            { id: "e2", text: "🐂 Anoa", target: "sulawesi" },
+            { id: "e3", text: "🐦 Burung Maleo", target: "sulawesi" },
+            { id: "e4", text: "🕊️ Jalak Bali", target: "bali" },
+            { id: "e5", text: "🌺 Rafflesia arnoldii", target: "sumatra" },
+            { id: "e6", text: "🦜 Cenderawasih", target: "papua" }
+          ]
+        },
+        // POS 3: RONDE 6
+        {
+          pos: 3,
+          roundNum: 6,
+          title: "POS 3: Peran & Ciri Khas Endemik",
+          instruction: "Cocokkan Spesies dengan Peran Ekologis atau Ciri Khasnya!",
+          zones: [
+            { id: "p_komodo", label: "Predator Puncak Menjaga Keseimbangan" },
+            { id: "p_orangutan", label: "Penyebar Biji Regenerasi Hutan" },
+            { id: "p_maleo", label: "Mengubur Telur di Tanah Pasir Hangat" },
+            { id: "p_rafflesia", label: "Tumbuhan Parasit Bunga Raksasa" },
+            { id: "p_badak", label: "Mamalia Cula Satu di Ujung Kulon" }
+          ],
+          items: [
+            { id: "pr1", text: "🦎 Komodo", target: "p_komodo" },
+            { id: "pr2", text: "🦧 Orangutan", target: "p_orangutan" },
+            { id: "pr3", text: "🐦 Burung Maleo", target: "p_maleo" },
+            { id: "pr4", text: "🌺 Rafflesia arnoldii", target: "p_rafflesia" },
+            { id: "pr5", text: "🦏 Badak Jawa", target: "p_badak" }
+          ]
+        },
+        // MISI AKHIR: RONDE 7
+        {
+          pos: 4,
+          roundNum: 7,
+          title: "MISI AKHIR: Analisis Ancaman Keanekaragaman",
+          instruction: "Hubungkan Jenis Ancaman dengan Dampak Ekologis yang ditimbulkannya!",
+          zones: [
+            { id: "d_deforestasi", label: "Hilangnya Habitat Utama Satwa" },
+            { id: "d_perburuan", label: "Populasi Satwa Langka Menurun Drastis" },
+            { id: "d_pencemaran", label: "Kematian Biota Air & Kerusakan Sungai" },
+            { id: "d_invasif", label: "Spesies Asli Tersingkir & Kalah Bersaing" }
+          ],
+          items: [
+            { id: "a1", text: "🚜 Alih Fungsi Hutan (Deforestasi)", target: "d_deforestasi" },
+            { id: "a2", text: "🏹 Perburuan & Perdagangan Ilegal", target: "d_perburuan" },
+            { id: "a3", text: "🧪 Pencemaran Limbah ke Sungai", target: "d_pencemaran" },
+            { id: "a4", text: "🐟 Masuknya Ikan Invasif (Sapu-sapu)", target: "d_invasif" }
+          ]
+        },
+        // MISI AKHIR: RONDE 8
+        {
+          pos: 4,
+          roundNum: 8,
+          title: "MISI AKHIR: Strategi Konservasi (In Situ vs Ex Situ)",
+          instruction: "Klasifikasikan Upaya Pelestarian ke Metode IN SITU atau EX SITU!",
+          zones: [
+            { id: "in_situ", label: "🌿 IN SITU (Pelestarian di Habitat Asli)" },
+            { id: "ex_situ", label: "🏛️ EX SITU (Pelestarian di Luar Habitat Asli)" }
+          ],
+          items: [
+            { id: "k1", text: "🏞️ Taman Nasional Ujung Kulon", target: "in_situ" },
+            { id: "k2", text: "🦜 Penangkaran & Release Jalak Bali", target: "ex_situ" },
+            { id: "k3", text: "🌱 Kebun Raya Bogor", target: "ex_situ" },
+            { id: "k4", text: "🪵 Hutan Lindung & Reboisasi Mangrove", target: "in_situ" },
+            { id: "k5", text: "🌾 Bank Benih Nasional", target: "ex_situ" }
+          ]
+        }
+      ]
+    };
+
+    /* ==========================================
+       AUDIO SYNTHESIZER (WEB AUDIO API - NO EXTERNAL MP3)
+       ========================================== */
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+      }
+
+      playTone(freq, type, duration) {
+        if (this.muted || !this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      }
+
+      click() { this.playTone(400, 'sine', 0.08); }
+      correct() {
+        this.playTone(523.25, 'triangle', 0.1);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.15), 100);
+      }
+      wrong() {
+        this.playTone(220, 'sawtooth', 0.15);
+        setTimeout(() => this.playTone(180, 'sawtooth', 0.2), 120);
+      }
+      victory() {
+        const notes = [400, 500, 600, 800];
+        notes.forEach((n, idx) => {
+          setTimeout(() => this.playTone(n, 'square', 0.15), idx * 120);
+        });
+      }
+    }
+
+    const sfx = new SoundFX();
+
+    /* ==========================================
+       GAME ENGINE & LOGIC MANAGER
+       ========================================== */
+    const GameApp = {
+      player: { name: "", class: "" },
+      currentRoundIndex: 0,
+      totalScore: 0,
+      totalStars: 0,
+      roundMistakes: 0,
+      selectedCardId: null,
+      leaderboard: [],
+
+      init() {
+        this.loadLeaderboard();
+        this.bindEvents();
+        this.showSubMateri(1);
+      },
+
+      bindEvents() {
+        document.getElementById('btn-audio').addEventListener('click', () => {
+          sfx.muted = !sfx.muted;
+          document.getElementById('btn-audio').textContent = sfx.muted ? "🔇" : "🔊";
+        });
+
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+          } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+          }
+        });
+      },
+
+      submitLogin() {
+        sfx.init();
+        sfx.click();
+        const nameInput = document.getElementById('player-name').value.trim();
+        const classInput = document.getElementById('player-class').value.trim();
+        
+        if (!nameInput || !classInput) return;
+
+        this.player.name = nameInput;
+        this.player.class = classInput;
+
+        document.getElementById('menu-welcome-text').textContent = `Selamat Datang, Peneliti Muda ${this.player.name}!`;
+        document.getElementById('hud-name').textContent = `${this.player.name} (${this.player.class})`;
+
+        this.showPanel('screen-menu');
+      },
+
+      showPanel(panelId, tabTarget = null) {
+        sfx.click();
+        document.querySelectorAll('.screen-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+
+        if (panelId === 'screen-info' && tabTarget) {
+          this.switchTab(tabTarget);
+        }
+      },
+
+      switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+      },
+
+      showSubMateri(num) {
+        document.getElementById('sub-materi-content').innerHTML = GAME_DATA.materi[num];
+      },
+
+      startExpedition() {
+        this.currentRoundIndex = 0;
+        this.totalScore = 0;
+        this.totalStars = 0;
+        this.showPanel('screen-game');
+        this.showMapOverlay();
+      },
+
+      showMapOverlay() {
+        document.getElementById('map-overlay').style.display = 'flex';
+        const curRound = GAME_DATA.rounds[this.currentRoundIndex];
+        
+        // Update nodes status
+        for (let i = 1; i <= 4; i++) {
+          const node = document.getElementById(`node-pos${i}`);
+          node.classList.remove('active', 'completed');
+          if (i < curRound.pos) node.classList.add('completed');
+          else if (i === curRound.pos) node.classList.add('active');
+        }
+      },
+
+      launchCurrentRound() {
+        document.getElementById('map-overlay').style.display = 'none';
+        this.roundMistakes = 0;
+        this.selectedCardId = null;
+        this.renderRound();
+      },
+
+      renderRound() {
+        const round = GAME_DATA.rounds[this.currentRoundIndex];
+        
+        // Update HUD
+        document.getElementById('hud-score-val').textContent = this.totalScore;
+        document.getElementById('hud-round-title').textContent = `Ronde ${round.roundNum}/8`;
+        document.getElementById('game-instruction-text').textContent = round.instruction;
+        document.getElementById('hud-stars-display').textContent = "⭐⭐⭐";
+        
+        const progressPct = ((round.roundNum - 1) / 8) * 100;
+        document.getElementById('hud-progress-fill').style.width = `${progressPct}%`;
+
+        const playArea = document.getElementById('main-play-area');
+        playArea.innerHTML = "";
+
+        if (round.type === "diagram") {
+          this.renderDiagramRound(round, playArea);
+        } else {
+          this.renderStandardSortingRound(round, playArea);
+        }
+      },
+
+      renderStandardSortingRound(round, container) {
+        // Source Cards Container
+        const sourceDiv = document.createElement('div');
+        sourceDiv.className = 'source-container';
+        sourceDiv.id = 'source-cards';
+
+        // Shuffle Items
+        const shuffledItems = [...round.items].sort(() => Math.random() - 0.5);
+
+        shuffledItems.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'draggable-card';
+          card.id = `card-${item.id}`;
+          card.textContent = item.text;
+          card.setAttribute('draggable', 'true');
+          card.dataset.target = item.target;
+          card.dataset.id = item.id;
+
+          // Drag Events
+          card.addEventListener('dragstart', (e) => this.handleDragStart(e));
+          card.addEventListener('dragend', (e) => this.handleDragEnd(e));
+          
+          // Tap Selection Fallback
+          card.addEventListener('click', () => this.handleCardTap(card));
+
+          sourceDiv.appendChild(card);
+        });
+
+        // Target Zones Container
+        const targetDiv = document.createElement('div');
+        targetDiv.className = 'target-container';
+
+        round.zones.forEach(zone => {
+          const zBox = document.createElement('div');
+          zBox.className = 'drop-zone';
+          zBox.dataset.zoneId = zone.id;
+
+          const zTitle = document.createElement('div');
+          zTitle.className = 'drop-zone-title';
+          zTitle.textContent = zone.label;
+
+          zBox.appendChild(zTitle);
+
+          // Drop Zone Events
+          zBox.addEventListener('dragover', (e) => e.preventDefault());
+          zBox.addEventListener('dragenter', (e) => zBox.classList.add('hovered'));
+          zBox.addEventListener('dragleave', () => zBox.classList.remove('hovered'));
+          zBox.addEventListener('drop', (e) => this.handleDrop(e, zone.id));
+          zBox.addEventListener('click', () => this.handleZoneTap(zone.id));
+
+          targetDiv.appendChild(zBox);
+        });
+
+        container.appendChild(sourceDiv);
+        container.appendChild(targetDiv);
+      },
+
+      renderDiagramRound(round, container) {
+        const board = document.createElement('div');
+        board.className = 'diagram-board';
+
+        // Draw Diagram Overlay Boxes
+        round.zones.forEach(z => {
+          const zEl = document.createElement('div');
+          zEl.className = 'map-zone-target';
+          zEl.style.cssText = z.style;
+          zEl.dataset.zoneId = z.id;
+          zEl.innerHTML = `<strong>${z.label}</strong>`;
+          
+          zEl.addEventListener('dragover', (e) => e.preventDefault());
+          zEl.addEventListener('drop', (e) => this.handleDrop(e, z.id));
+          zEl.addEventListener('click', () => this.handleZoneTap(z.id));
+
+          board.appendChild(zEl);
+        });
+
+        // Source Cards
+        const sourceDiv = document.createElement('div');
+        sourceDiv.className = 'source-container';
+        sourceDiv.style.maxWidth = "250px";
+
+        round.items.sort(() => Math.random() - 0.5).forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'draggable-card';
+          card.id = `card-${item.id}`;
+          card.textContent = item.text;
+          card.setAttribute('draggable', 'true');
+          card.dataset.target = item.target;
+          card.dataset.id = item.id;
+
+          card.addEventListener('dragstart', (e) => this.handleDragStart(e));
+          card.addEventListener('click', () => this.handleCardTap(card));
+          sourceDiv.appendChild(card);
+        });
+
+        container.appendChild(sourceDiv);
+        container.appendChild(board);
+      },
+
+      /* INTERACTION HANDLERS */
+      handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.id);
+        e.target.classList.add('dragging');
+      },
+
+      handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+      },
+
+      handleCardTap(card) {
+        if (card.classList.contains('locked')) return;
+        sfx.click();
+        document.querySelectorAll('.draggable-card').forEach(c => c.classList.remove('selected'));
+        this.selectedCardId = card.dataset.id;
+        card.classList.add('selected');
+      },
+
+      handleZoneTap(zoneId) {
+        if (!this.selectedCardId) return;
+        this.verifyAnswer(this.selectedCardId, zoneId);
+        this.selectedCardId = null;
+        document.querySelectorAll('.draggable-card').forEach(c => c.classList.remove('selected'));
+      },
+
+      handleDrop(e, zoneId) {
+        e.preventDefault();
+        const cardId = e.dataTransfer.getData('text/plain');
+        this.verifyAnswer(cardId, zoneId);
+      },
+
+      verifyAnswer(cardId, targetZoneId) {
+        const card = document.getElementById(`card-${cardId}`);
+        if (!card || card.classList.contains('locked')) return;
+
+        const correctTarget = card.dataset.target;
+
+        if (correctTarget === targetZoneId) {
+          // RIGHT ANSWER
+          sfx.correct();
+          card.classList.add('locked');
+          card.removeAttribute('draggable');
+          
+          // Append card to zone
+          const dropZone = document.querySelector(`[data-zone-id="${targetZoneId}"]`);
+          dropZone.appendChild(card);
+
+          this.totalScore += (this.roundMistakes === 0) ? 10 : 5;
+          document.getElementById('hud-score-val').textContent = this.totalScore;
+          this.showToast("✨ Benar! Jawaban kamu tepat.", true);
+
+          this.checkRoundCompletion();
+        } else {
+          // WRONG ANSWER
+          sfx.wrong();
+          this.roundMistakes++;
+          this.totalScore = Math.max(0, this.totalScore - 2);
+          document.getElementById('hud-score-val').textContent = this.totalScore;
+
+          // Update Stars
+          if (this.roundMistakes >= 3) {
+            document.getElementById('hud-stars-display').textContent = "⭐";
+          } else if (this.roundMistakes >= 1) {
+            document.getElementById('hud-stars-display').textContent = "⭐⭐";
+          }
+
+          this.showToast("❌ Kurang tepat, coba periksa kembali!", false);
+        }
+      },
+
+      showToast(msg, isCorrect) {
+        const toast = document.getElementById('feedback-toast');
+        toast.textContent = msg;
+        toast.className = `feedback-toast ${isCorrect ? 'correct' : 'wrong'}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2000);
+      },
+
+      checkRoundCompletion() {
+        const remainingCards = document.querySelectorAll('.source-container .draggable-card:not(.locked)');
+        if (remainingCards.length === 0) {
+          // Calculate round stars
+          let starsEarned = 3;
+          if (this.roundMistakes >= 3) starsEarned = 1;
+          else if (this.roundMistakes >= 1) starsEarned = 2;
+
+          this.totalStars += starsEarned;
+
+          setTimeout(() => {
+            sfx.victory();
+            this.currentRoundIndex++;
+            if (this.currentRoundIndex < GAME_DATA.rounds.length) {
+              this.showMapOverlay();
+            } else {
+              this.showFinalResult();
+            }
+          }, 1000);
+        }
+      },
+
+      resetCurrentRound() {
+        sfx.click();
+        this.renderRound();
+      },
+
+      showFinalResult() {
+        this.saveScore();
+        document.getElementById('result-player-name').textContent = `Hebat, ${this.player.name}! (${this.player.class})`;
+        document.getElementById('result-final-score').textContent = this.totalScore;
+        document.getElementById('result-final-stars').textContent = `${this.totalStars} / 24`;
+
+        // Determine Badge
+        let badge = "🥉";
+        let title = "Lencana Perunggu: Peneliti Muda";
+        if (this.totalScore >= 70) {
+          badge = "🥇";
+          title = "Lencana Emas: Master Keanekaragaman Hayati";
+        } else if (this.totalScore >= 45) {
+          badge = "🥈";
+          title = "Lencana Perak: Peneliti Senior";
+        }
+
+        document.getElementById('result-badge').textContent = badge;
+        document.getElementById('result-badge-title').textContent = title;
+
+        this.renderLeaderboard();
+        this.showPanel('screen-result');
+      },
+
+      saveScore() {
+        try {
+          const data = JSON.parse(localStorage.getItem('ekspedisi_scores') || '[]');
+          data.push({
+            name: this.player.name,
+            class: this.player.class,
+            score: this.totalScore
+          });
+          data.sort((a,b) => b.score - a.score);
+          localStorage.setItem('ekspedisi_scores', JSON.stringify(data.slice(0, 5)));
+        } catch(e) {}
+      },
+
+      loadLeaderboard() {
+        try {
+          this.leaderboard = JSON.parse(localStorage.getItem('ekspedisi_scores') || '[]');
+        } catch(e) {
+          this.leaderboard = [];
+        }
+      },
+
+      renderLeaderboard() {
+        this.loadLeaderboard();
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = "";
+        
+        if (this.leaderboard.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Belum ada skor tersimpan</td></tr>`;
+          return;
+        }
+
+        this.leaderboard.forEach((row, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${idx+1}</td><td>${row.name}</td><td>${row.class}</td><td><strong>${row.score}</strong></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    };
+
+    // Initialize App on DOM Load
+    window.addEventListener('DOMContentLoaded', () => {
+      GameApp.init();
+    });
+  </script>
+</body>
+</html>
